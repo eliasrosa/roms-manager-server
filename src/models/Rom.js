@@ -20,6 +20,10 @@ const romSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    sha1: {
+      type: String,
+      required: true,
+    },
     modified: {
       type: Date,
       required: true,

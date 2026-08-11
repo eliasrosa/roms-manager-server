@@ -7,12 +7,16 @@ const PLATFORMS = ['gba', 'gb', 'gbc', 'n64', 'nes', 'snes', 'genesis', 'game-ge
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '../../data');
 
-function computeMd5(filepath) {
+function computeHashes(filepath) {
   return new Promise((resolve, reject) => {
-    const hash = crypto.createHash('md5');
+    const md5 = crypto.createHash('md5');
+    const sha1 = crypto.createHash('sha1');
     const stream = fs.createReadStream(filepath);
-    stream.on('data', (chunk) => hash.update(chunk));
-    stream.on('end', () => resolve(hash.digest('hex')));
+    stream.on('data', (chunk) => {
+      md5.update(chunk);
+      sha1.update(chunk);
+    });
+    stream.on('end', () => resolve({ md5: md5.digest('hex'), sha1: sha1.digest('hex') }));
     stream.on('error', reject);
   });
 }
@@ -53,7 +57,7 @@ async function indexPlatform(platform) {
         continue;
       }
 
-      const md5 = await computeMd5(filepath);
+      const { md5, sha1 } = await computeHashes(filepath);
 
       await Rom.findOneAndUpdate(
         { platform, filename },
@@ -62,6 +66,7 @@ async function indexPlatform(platform) {
           filename,
           size: stat.size,
           md5,
+          sha1,
           modified: stat.mtime,
         },
         { upsert: true, new: true }
