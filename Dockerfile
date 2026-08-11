@@ -1,9 +1,13 @@
-FROM python:3.11-slim
+FROM node:20-alpine
 
 WORKDIR /app
-COPY serve.py .
+
+COPY package.json .
+RUN npm install --omit=dev
+
+COPY src/ ./src/
 
 VOLUME ["/data"]
 EXPOSE 8080
 
-CMD ["python3", "serve.py", "--port", "8080", "--dir", "/data"]
+CMD ["node", "src/app.js"]
