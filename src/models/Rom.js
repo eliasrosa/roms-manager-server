@@ -24,6 +24,10 @@ const romSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    crc32: {
+      type: String,
+      required: true,
+    },
     modified: {
       type: Date,
       required: true,

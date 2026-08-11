@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { crc32 } = require('crc');
 const Rom = require('../models/Rom');
 
 const PLATFORMS = ['gba', 'gb', 'gbc', 'n64', 'nes', 'snes', 'genesis', 'game-gear', 'master-system', 'fbneo'];
@@ -11,12 +12,18 @@ function computeHashes(filepath) {
   return new Promise((resolve, reject) => {
     const md5 = crypto.createHash('md5');
     const sha1 = crypto.createHash('sha1');
+    let crc = 0;
     const stream = fs.createReadStream(filepath);
     stream.on('data', (chunk) => {
       md5.update(chunk);
       sha1.update(chunk);
+      crc = crc32(chunk, crc);
     });
-    stream.on('end', () => resolve({ md5: md5.digest('hex'), sha1: sha1.digest('hex') }));
+    stream.on('end', () => resolve({
+      md5: md5.digest('hex'),
+      sha1: sha1.digest('hex'),
+      crc32: crc.toString(16).padStart(8, '0').toUpperCase(),
+    }));
     stream.on('error', reject);
   });
 }
@@ -57,7 +64,7 @@ async function indexPlatform(platform) {
         continue;
       }
 
-      const { md5, sha1 } = await computeHashes(filepath);
+      const { md5, sha1, crc32: crc32Hash } = await computeHashes(filepath);
 
       await Rom.findOneAndUpdate(
         { platform, filename },
@@ -67,6 +74,7 @@ async function indexPlatform(platform) {
           size: stat.size,
           md5,
           sha1,
+          crc32: crc32Hash,
           modified: stat.mtime,
         },
         { upsert: true, new: true }
