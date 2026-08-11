@@ -6,8 +6,9 @@ services:
     environment:
       PORT: 8080
       MONGO_URI: mongodb://mongo:27017/roms-manager
+      DATA_DIR: /data
     volumes:
-      - ./data:/data
+      - /home/elias/Roms:/data
     depends_on:
       mongo:
         condition: service_healthy
