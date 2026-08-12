@@ -5,7 +5,9 @@
   "main": "src/app.js",
   "scripts": {
     "start": "node src/app.js",
-    "dev": "nodemon src/app.js"
+    "dev": "nodemon src/app.js",
+    "test": "jest --runInBand",
+    "test:coverage": "jest --runInBand --coverage"
   },
   "dependencies": {
     "crc": "^4.3.2",
@@ -14,6 +16,7 @@
     "mongoose": "8.5.1"
   },
   "devDependencies": {
+    "jest": "^29.7.0",
     "nodemon": "3.1.4"
   },
   "engines": {
