@@ -1,44 +1,42 @@
 const mongoose = require('mongoose');
+const { PLATFORM_VALUES } = require('../../domain/enums/Platform');
 
 const romSchema = new mongoose.Schema(
   {
     platform: {
-      type: String,
+      type:     String,
       required: true,
-      enum: ['gba', 'gb', 'gbc', 'n64', 'nes', 'snes', 'genesis', 'game-gear', 'master-system', 'fbneo'],
-      index: true,
+      enum:     PLATFORM_VALUES,
+      index:    true,
     },
     filename: {
-      type: String,
+      type:     String,
       required: true,
     },
     size: {
-      type: Number,
+      type:     Number,
       required: true,
     },
     md5: {
-      type: String,
+      type:     String,
       required: true,
     },
     sha1: {
-      type: String,
+      type:     String,
       required: true,
     },
     crc32: {
-      type: String,
+      type:     String,
       required: true,
     },
     modified: {
-      type: Date,
+      type:     Date,
       required: true,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-// Índice composto: platform + filename são únicos juntos
 romSchema.index({ platform: 1, filename: 1 }, { unique: true });
 
 module.exports = mongoose.model('Rom', romSchema);

@@ -3,7 +3,8 @@
 ## Visão Geral
 
 Servidor de sincronização para o app **ROMs Manager NS** (Nintendo Switch).  
-Stack: **Node.js 20 + Express + MongoDB (Mongoose)** — rodando via Docker Compose.
+Stack: **Node.js 20 + Express + MongoDB (Mongoose)** — rodando via Docker Compose.  
+Arquitetura: **Hexagonal (Ports & Adapters)**.
 
 ---
 
@@ -11,81 +12,88 @@ Stack: **Node.js 20 + Express + MongoDB (Mongoose)** — rodando via Docker Comp
 
 ```
 roms-manager-server/
-├── src/                        # Código-fonte da aplicação
-│   ├── app.js                  # Entry point: Express, CORS, rotas, start()
-│   └── db.js                   # Conexão Mongoose (connect, eventos)
+├── src/
+│   ├── app.js                              # Boot: DI, Express, start
+│   ├── domain/
+│   │   ├── enums/
+│   │   │   └── Platform.js                # Enum frozen + isValidPlatform()
+│   │   └── entities/
+│   │       └── Rom.js                     # Entidade pura (POJO) com toManifestEntry()
+│   ├── application/
+│   │   ├── ports/
+│   │   │   ├── RomRepository.js           # Contrato do repositório
+│   │   │   └── FileStorage.js             # Contrato do filesystem
+│   │   └── usecases/
+│   │       ├── ListRoms.js                # Filtro e listagem de ROMs
+│   │       ├── GetManifest.js             # Manifest leve para sync
+│   │       ├── DownloadRom.js             # Resolve path + valida existência
+│   │       └── SyncRoms.js                # Indexação (syncAll / syncPlatform)
+│   ├── infrastructure/
+│   │   ├── db/
+│   │   │   ├── connection.js              # Conexão Mongoose
+│   │   │   └── RomModel.js               # Schema Mongoose (usa Platform enum)
+│   │   ├── repositories/
+│   │   │   └── MongoRomRepository.js      # Implementa RomRepository via Mongoose
+│   │   ├── storage/
+│   │   │   └── LocalFileStorage.js        # Implementa FileStorage via fs + crypto + crc
+│   │   └── indexer/
+│   │       └── RomIndexer.js              # Fachada sobre SyncRoms
+│   └── interfaces/
+│       └── http/
+│           ├── controllers/
+│           │   └── RomController.js       # Handlers HTTP → use cases
+│           └── routes/
+│               └── roms.js               # Monta Express Router com DI
 │
-├── data/                       # Volume montado em /data no container
-│   ├── gba/
-│   │   └── roms/               # ROMs Game Boy Advance (.gba)
-│   ├── gb/
-│   │   └── roms/               # ROMs Game Boy (.gb)
-│   ├── gbc/
-│   │   └── roms/               # ROMs Game Boy Color (.gbc)
-│   └── n64/
-│       └── roms/               # ROMs Nintendo 64 (.z64, .n64, .v64)
-│
-├── .env.example                # Variáveis de ambiente (referência)
+├── data/                                  # Volume montado em /data no container
+├── docs/
+│   ├── api.md                            # Referência da API
+│   └── architecture.md                  # Arquitetura e fluxos
+├── .env.example
 ├── .gitignore
-├── Dockerfile                  # node:20-alpine, expõe porta 8080
-├── docker-compose.yml          # Serviços: app + mongo:7 + mongo-express
-├── package.json                # Dependências: express, mongoose, dotenv, crc
-├── README.md
+├── Dockerfile                            # node:20-alpine, expõe porta 8080
+├── docker-compose.yml                    # Serviços: app + mongo:7 + mongo-express
+└── package.json                          # Dependências: express, mongoose, dotenv, crc
 ```
+
+---
+
+## Arquitetura Hexagonal — Regra de Dependência
+
+```
+interfaces → application ← infrastructure
+                 ↓
+              domain
+```
+
+- `domain` — não importa nada externo
+- `application` — conhece apenas `domain` e seus ports (contratos)
+- `infrastructure` — implementa os ports; conhece libs externas (Mongoose, crypto, crc)
+- `interfaces` — conhece apenas use cases (via controller)
+- `app.js` — único lugar com DI explícita
 
 ---
 
 ## Estrutura do diretório `data/`
 
-O diretório `data/` é montado como volume em `/data` no container.  
+Montado como volume em `/data` no container.  
 **Nunca commitar arquivos de ROM, save ou cover** — apenas a estrutura de pastas.
-
-A estrutura é organizada por **plataforma**, cada uma com suas próprias subpastas:
 
 ```
 data/
-├── gba/
-│   └── roms/               # Game Boy Advance (.gba)
-├── gb/
-│   └── roms/               # Game Boy (.gb)
-├── gbc/
-│   └── roms/               # Game Boy Color (.gbc)
-├── n64/
-│   └── roms/               # Nintendo 64 (.z64, .n64, .v64)
-├── nes/
-│   └── roms/               # Nintendo Entertainment System (.nes)
-├── snes/
-│   └── roms/               # Super Nintendo (.sfc, .smc)
-├── genesis/
-│   └── roms/               # Sega Genesis / Mega Drive (.md, .bin, .gen)
-├── game-gear/
-│   └── roms/               # Sega Game Gear (.gg)
-├── master-system/
-│   └── roms/               # Sega Master System (.sms)
-└── fbneo/
-    └── roms/               # FinalBurn Neo — arcade (.zip)
+├── gba/roms/           # Game Boy Advance (.gba)
+├── gb/roms/            # Game Boy (.gb)
+├── gbc/roms/           # Game Boy Color (.gbc)
+├── n64/roms/           # Nintendo 64 (.z64, .n64, .v64)
+├── nes/roms/           # Nintendo Entertainment System (.nes)
+├── snes/roms/          # Super Nintendo (.sfc, .smc)
+├── genesis/roms/       # Sega Genesis / Mega Drive (.md, .bin, .gen)
+├── game-gear/roms/     # Sega Game Gear (.gg)
+├── master-system/roms/ # Sega Master System (.sms)
+└── fbneo/roms/         # FinalBurn Neo — arcade (.zip)
 ```
 
-Plataformas suportadas: `gba`, `gb`, `gbc`, `n64`, `nes`, `snes`, `genesis`, `game-gear`, `master-system`, `fbneo`.
-
-O `manifest.json` é gerado automaticamente no diretório `data/` pelo servidor —  
-**não commitar** o `manifest.json`.
-
----
-
-## Estrutura do `src/`
-
-```
-src/
-├── app.js                  # Entry point: Express, CORS, rotas, boot (connect + indexAll)
-├── db.js                   # Conexão Mongoose
-├── models/
-│   └── Rom.js              # Schema: platform, filename, size, md5, sha1, crc32, modified
-├── routes/
-│   └── roms.js             # Rotas de ROMs
-└── services/
-    └── indexer.js          # Varre data/<platform>/roms/ e faz upsert no Mongo
-```
+Plataformas definidas em `src/domain/enums/Platform.js` — fonte única de verdade.
 
 ---
 
@@ -93,7 +101,7 @@ src/
 
 ```js
 {
-  platform: String,   // enum das plataformas suportadas (indexed)
+  platform: String,   // enum das plataformas (indexed)
   filename: String,   // ex: 'Mario Kart (USA).gba'
   size: Number,       // bytes
   md5: String,        // hash MD5 hex lowercase
@@ -106,7 +114,7 @@ src/
 // Índice único: { platform, filename }
 ```
 
-Os três hashes são calculados em um único `readStream` por arquivo (sem ler o arquivo duas vezes).  
+Os três hashes são calculados em um único `readStream` por arquivo.  
 Skip de reindexação: se `size` e `modified` não mudaram, o arquivo é pulado.
 
 ---
@@ -123,54 +131,45 @@ Skip de reindexação: se `size` e `modified` não mudaram, o arquivo é pulado.
 
 ### Filtros — `GET /roms`
 
-| Query param | Exemplo | Notas |
-|-------------|---------|-------|
-| `platform`  | `?platform=gba` | Filtra por plataforma |
-| `md5`       | `?md5=4e46dd...` | Case-insensitive |
-| `sha1`      | `?sha1=856a08...` | Case-insensitive |
-| `crc32`     | `?crc32=AD4D5EC2` | Case-insensitive |
-
-Filtros são combináveis entre si.
+| Query param | Notas |
+|-------------|-------|
+| `platform`  | Filtra por plataforma |
+| `md5`       | Case-insensitive |
+| `sha1`      | Case-insensitive |
+| `crc32`     | Case-insensitive |
 
 ---
 
 ## Fluxo de Sync — App Nintendo Switch
 
-O app no Switch usa o endpoint de manifest para sincronizar ROMs de forma eficiente:
-
 1. **`GET /roms/:platform/manifest`** — recebe lista leve com `filename`, `size`, `crc32`
 2. App compara com o storage local (por filename + crc32)
 3. **`GET /roms/:platform/:filename`** — baixa apenas as ROMs ausentes ou divergentes
-4. Após download, verifica CRC32 local para confirmar integridade do arquivo
+4. Verifica CRC32 local após download para confirmar integridade
 
-O manifest usa CRC32 (4 bytes) em vez de MD5/SHA1 para minimizar payload na comparação.  
-MD5 e SHA1 ficam disponíveis via `GET /roms` para verificação mais rigorosa se necessário.
+O manifest usa CRC32 para minimizar payload. MD5/SHA1 disponíveis via `GET /roms`.
 
 ---
 
 ## Variáveis de Ambiente
 
-| Variável    | Padrão                                    | Descrição               |
-|-------------|-------------------------------------------|-------------------------|
-| `PORT`      | `8080`                                    | Porta HTTP do servidor  |
-| `MONGO_URI` | `mongodb://localhost:27017/roms-manager`  | URI de conexão MongoDB  |
-| `DATA_DIR`  | `./data`                                  | Diretório base de arquivos |
+| Variável    | Padrão                                   | Descrição               |
+|-------------|------------------------------------------|-------------------------|
+| `PORT`      | `8080`                                   | Porta HTTP do servidor  |
+| `MONGO_URI` | `mongodb://localhost:27017/roms-manager` | URI de conexão MongoDB  |
+| `DATA_DIR`  | `./data`                                 | Diretório base de ROMs  |
 
 ---
 
 ## Docker Compose
 
-| Serviço         | Imagem          | Porta | Notas                              |
-|-----------------|-----------------|-------|------------------------------------|
-| `app`           | build local     | 8080  | Aguarda healthcheck do Mongo       |
-| `mongo`         | `mongo:7`       | —     | Volume `mongo_data` para persistência |
-| `mongo-express` | `mongo-express` | 8081  | Web UI — http://localhost:8081     |
+| Serviço         | Imagem          | Porta | Notas                          |
+|-----------------|-----------------|-------|--------------------------------|
+| `app`           | build local     | 8080  | Aguarda healthcheck do Mongo   |
+| `mongo`         | `mongo:7`       | —     | Volume `mongo_data`            |
+| `mongo-express` | `mongo-express` | 8081  | Web UI — http://localhost:8081 |
 
 ```bash
-# Subir ambiente
-docker compose up --build
-
-# Subir em background
 docker compose up -d --build
 ```
 
@@ -179,9 +178,7 @@ docker compose up -d --build
 ## Convenções de Código
 
 - Arquivos em `src/` — CommonJS (`require`/`module.exports`)
-- Nomes de arquivos: `kebab-case.js`
+- Nomes de arquivos: `kebab-case.js` (exceto classes: `PascalCase.js`)
 - Variáveis e funções: `camelCase`
-- Modelos Mongoose: `PascalCase` em `src/models/`
-- Rotas: `src/routes/`
-- Services: `src/services/`
+- Classes: `PascalCase`
 - Sem TypeScript por ora — JavaScript puro
