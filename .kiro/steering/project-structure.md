@@ -3,7 +3,7 @@
 ## Visão Geral
 
 Servidor de sincronização para o app **ROMs Manager NS** (Nintendo Switch).  
-Stack: **Node.js 20 + Express + MongoDB (Mongoose)** — rodando via Docker Compose.  
+Stack: **Node.js 24 + Express + MongoDB (Mongoose)** — rodando via Docker Compose.  
 Arquitetura: **Hexagonal (Ports & Adapters)**.
 
 ---
@@ -45,14 +45,20 @@ roms-manager-server/
 │           └── routes/
 │               └── roms.js               # Monta Express Router com DI
 │
+├── .github/
+│   └── workflows/
+│       └── deploy-zimaos.yaml            # CI/CD: deploy automático no ZimaOS
+├── .zimaos/
+│   └── install.sh                        # Script de setup do runner no ZimaOS
 ├── data/                                  # Volume montado em /data no container
 ├── docs/
 │   ├── api.md                            # Referência da API
-│   └── architecture.md                  # Arquitetura e fluxos
+│   └── architecture.md                   # Arquitetura e fluxos
 ├── .env.example
 ├── .gitignore
-├── Dockerfile                            # node:20-alpine, expõe porta 8080
-├── docker-compose.yml                    # Serviços: app + mongo:7 + mongo-express
+├── Dockerfile                            # node:24-alpine, expõe porta 8080
+├── docker-compose.yml                    # Dev: app + mongo:7 + mongo-express
+├── docker-compose-zimaos.yml             # Produção: compose do CasaOS/ZimaOS
 └── package.json                          # Dependências: express, mongoose, dotenv, crc
 ```
 
@@ -123,6 +129,7 @@ Skip de reindexação: se `size` e `modified` não mudaram, o arquivo é pulado.
 
 | Método | Path | Descrição |
 |--------|------|-----------|
+| `GET`  | `/` | Status básico (health simplificado) |
 | `GET`  | `/health` | Status do servidor |
 | `GET`  | `/roms` | Lista ROMs com filtros opcionais |
 | `GET`  | `/roms/:platform/manifest` | Manifest leve para sync (filename + size + crc32) |
@@ -163,6 +170,8 @@ O manifest usa CRC32 para minimizar payload. MD5/SHA1 disponíveis via `GET /rom
 
 ## Docker Compose
 
+### Dev (docker-compose.yml)
+
 | Serviço         | Imagem          | Porta | Notas                          |
 |-----------------|-----------------|-------|--------------------------------|
 | `app`           | build local     | 8080  | Aguarda healthcheck do Mongo   |
@@ -173,6 +182,13 @@ O manifest usa CRC32 para minimizar payload. MD5/SHA1 disponíveis via `GET /rom
 docker compose up -d --build
 ```
 
+### Produção — ZimaOS (docker-compose-zimaos.yml)
+
+| Serviço | Imagem              | Porta | Notas                              |
+|---------|---------------------|-------|------------------------------------|
+| `app`   | `roms-manager:latest` | 8080 | Imagem local, volume em /media/ZimaOS-HD/Roms |
+| `mongo` | `mongo:7`           | —     | Volume bind em /media/ZimaOS-HD/AppData/.mongo |
+
 ---
 
 ## Convenções de Código
@@ -182,3 +198,4 @@ docker compose up -d --build
 - Variáveis e funções: `camelCase`
 - Classes: `PascalCase`
 - Sem TypeScript por ora — JavaScript puro
+- Testes com Jest em `__tests__/` ao lado dos arquivos testados

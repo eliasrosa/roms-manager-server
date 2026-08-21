@@ -1,7 +1,7 @@
 # ROMs Manager Server
 
 Servidor de sincronização para o app **ROMs Manager NS** (Nintendo Switch).  
-Stack: **Node.js 20 + Express + MongoDB** — rodando via Docker Compose.
+Stack: **Node.js 24 + Express + MongoDB** — rodando via Docker Compose.
 
 ---
 
@@ -60,6 +60,7 @@ data/
 
 | Método | Path | Descrição |
 |--------|------|-----------|
+| `GET`  | `/` | Status básico (health simplificado) |
 | `GET`  | `/health` | Status do servidor |
 | `GET`  | `/roms` | Lista ROMs com filtros opcionais |
 | `GET`  | `/roms/:platform/manifest` | Manifest leve para sync (filename + size + crc32) |
@@ -101,6 +102,17 @@ GET /roms?platform=gba&crc32=AD4D5EC2
 
 - [Arquitetura e fluxos](docs/architecture.md)
 - [API Reference](docs/api.md)
+
+---
+
+## Deploy — ZimaOS
+
+O deploy é automático via GitHub Actions (self-hosted runner no ZimaOS).  
+Qualquer push na `main` dispara o workflow `.github/workflows/deploy-zimaos.yaml`:
+
+1. Checkout do código
+2. `docker build` da imagem `roms-manager:latest`
+3. SSH no ZimaOS para `docker compose up -d --force-recreate`
 
 ---
 

@@ -4,13 +4,24 @@ Base URL: `http://<host>:8080`
 
 ---
 
+## `GET /`
+
+Status básico do servidor (health simplificado).
+
+**Response**
+```json
+{ "status": "ok", "time": 1723456789000 }
+```
+
+---
+
 ## `GET /health`
 
 Retorna o status do servidor.
 
 **Response**
 ```json
-{ "status": "ok" }
+{ "status": "ok", "time": 1723456789000 }
 ```
 
 ---

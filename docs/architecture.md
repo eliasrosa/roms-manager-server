@@ -10,11 +10,12 @@ O servidor expõe uma API REST que o app **ROMs Manager NS** (Nintendo Switch) c
 
 | Componente  | Tecnologia         |
 |-------------|--------------------|
-| Runtime     | Node.js 20         |
+| Runtime     | Node.js 24         |
 | Framework   | Express            |
 | Banco       | MongoDB 7 (Mongoose) |
 | Hashing     | crypto (MD5, SHA1) + crc (CRC32) |
 | Infra       | Docker Compose     |
+| CI/CD       | GitHub Actions (self-hosted runner no ZimaOS) |
 
 ---
 
@@ -38,18 +39,57 @@ O servidor expõe uma API REST que o app **ROMs Manager NS** (Nintendo Switch) c
 
 ---
 
+## Arquitetura Hexagonal (Ports & Adapters)
+
+```
+interfaces → application ← infrastructure
+                 ↓
+              domain
+```
+
+- **domain** — entidades puras e enums, sem dependências externas
+- **application** — use cases e ports (contratos/interfaces)
+- **infrastructure** — implementações concretas (Mongoose, filesystem, crypto)
+- **interfaces** — controllers HTTP e rotas Express
+- **app.js** — composição raiz (DI explícita)
+
+---
+
 ## Estrutura do `src/`
 
 ```
 src/
-├── app.js          # Boot: conecta DB, indexa ROMs, sobe Express
-├── db.js           # Conexão Mongoose com eventos de log
-├── models/
-│   └── Rom.js      # Schema Mongoose
-├── routes/
-│   └── roms.js     # Rotas da API
-└── services/
-    └── indexer.js  # Lógica de indexação e hashing
+├── app.js                          # Boot: DI, conecta DB, indexa, sobe Express
+├── domain/
+│   ├── enums/
+│   │   └── Platform.js             # Enum frozen + isValidPlatform()
+│   └── entities/
+│       └── Rom.js                  # Entidade pura com toManifestEntry()
+├── application/
+│   ├── ports/
+│   │   ├── RomRepository.js        # Contrato do repositório
+│   │   └── FileStorage.js          # Contrato do filesystem
+│   └── usecases/
+│       ├── ListRoms.js             # Filtro e listagem
+│       ├── GetManifest.js          # Manifest leve para sync
+│       ├── DownloadRom.js          # Resolve path + valida existência
+│       └── SyncRoms.js             # Indexação (syncAll / syncPlatform)
+├── infrastructure/
+│   ├── db/
+│   │   ├── connection.js           # Conexão Mongoose
+│   │   └── RomModel.js             # Schema Mongoose
+│   ├── repositories/
+│   │   └── MongoRomRepository.js   # Implementa RomRepository
+│   ├── storage/
+│   │   └── LocalFileStorage.js     # Implementa FileStorage (fs + crypto + crc)
+│   └── indexer/
+│       └── RomIndexer.js           # Fachada sobre SyncRoms
+└── interfaces/
+    └── http/
+        ├── controllers/
+        │   └── RomController.js    # Handlers HTTP → use cases
+        └── routes/
+            └── roms.js             # Express Router com DI
 ```
 
 ---
@@ -75,7 +115,7 @@ src/
 
 ## Indexação
 
-O `indexer.js` varre `data/<platform>/roms/` e faz upsert no MongoDB.
+O `SyncRoms` use case (via `LocalFileStorage`) varre `data/<platform>/roms/` e faz upsert no MongoDB.
 
 **Otimização de skip:** se `size` e `modified` do arquivo forem iguais ao registro existente, o arquivo é pulado sem recalcular hashes.
 
@@ -131,3 +171,10 @@ Switch App                          Servidor
 | `game-gear`    | `.gg`                  |
 | `master-system`| `.sms`                 |
 | `fbneo`        | `.zip`                 |
+
+---
+
+## Deploy
+
+Deploy automático via GitHub Actions → ZimaOS.  
+Ver detalhes no steering `deploy.md` ou no workflow `.github/workflows/deploy-zimaos.yaml`.
