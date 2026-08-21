@@ -159,18 +159,28 @@ Switch App                          Servidor
 
 ## Plataformas Suportadas
 
-| Platform       | Extensões              |
-|----------------|------------------------|
-| `gba`          | `.gba`                 |
-| `gb`           | `.gb`                  |
-| `gbc`          | `.gbc`                 |
-| `n64`          | `.z64`, `.n64`, `.v64` |
-| `nes`          | `.nes`                 |
-| `snes`         | `.sfc`, `.smc`         |
-| `genesis`      | `.md`, `.bin`, `.gen`  |
-| `game-gear`    | `.gg`                  |
-| `master-system`| `.sms`                 |
-| `fbneo`        | `.zip`                 |
+| Platform       | Folder   | Extensões                              |
+|----------------|----------|----------------------------------------|
+| `nes`          | `nes/roms/` | `.nes`, `.unf`, `.unif`, `.fds`      |
+| `snes`         | `snes/roms/` | `.sfc`, `.smc`, `.fig`, `.swc`, `.bs`, `.st` |
+| `gb`           | `gb/roms/` | `.gb`                                 |
+| `gbc`          | `gbc/roms/` | `.gbc`                               |
+| `gba`          | `gba/roms/` | `.gba`, `.sgb`                       |
+| `n64`          | `n64/roms/` | `.z64`, `.n64`, `.v64`               |
+| `genesis`      | `genesis/roms/` | `.md`, `.gen`, `.bin`, `.smd`     |
+| `master-system`| `master-system/roms/` | `.sms`, `.bin`             |
+| `game-gear`    | `game-gear/roms/` | `.gg`, `.bin`                  |
+| `sega-cd`      | `sega-cd/roms/` | `.cue`, `.bin`, `.iso`, `.chd`   |
+| `saturn`       | `saturn/roms/` | `.cue`, `.bin`, `.iso`, `.chd`    |
+| `dc`           | `dc/roms/` | `.chd`, `.cdi`, `.gdi`, `.cue`, `.bin` |
+| `psx`          | `psx/roms/` | `.chd`, `.cue`, `.bin`, `.iso`       |
+| `psp`          | `psp/roms/` | `.iso`, `.cso`, `.pbp`, `.chd`       |
+| `gc`           | `gc/roms/` | `.iso`, `.gcm`, `.chd`, `.rvz`        |
+| `wii`          | `wii/roms/` | `.iso`, `.chd`, `.rvz`, `.wbfs`, `.wia`, `.m3u` |
+| `fbneo`        | `fbneo/roms/` | `.zip`                             |
+
+Extensões definidas em `src/domain/enums/Platform.js` — fonte única de verdade.  
+O indexador filtra apenas arquivos com extensão válida para a plataforma.
 
 ---
 

@@ -40,16 +40,23 @@ As ROMs ficam no diretório `data/`, organizado por plataforma:
 
 ```
 data/
-├── gba/roms/          # Game Boy Advance (.gba)
-├── gb/roms/           # Game Boy (.gb)
-├── gbc/roms/          # Game Boy Color (.gbc)
-├── n64/roms/          # Nintendo 64 (.z64, .n64, .v64)
-├── nes/roms/          # Nintendo Entertainment System (.nes)
-├── snes/roms/         # Super Nintendo (.sfc, .smc)
-├── genesis/roms/      # Sega Genesis / Mega Drive (.md, .bin, .gen)
-├── game-gear/roms/    # Sega Game Gear (.gg)
-├── master-system/roms/ # Sega Master System (.sms)
-└── fbneo/roms/        # FinalBurn Neo — arcade (.zip)
+├── nes/roms/           # Nintendo Entertainment System
+├── snes/roms/          # Super Nintendo
+├── gb/roms/            # Game Boy
+├── gbc/roms/           # Game Boy Color
+├── gba/roms/           # Game Boy Advance
+├── n64/roms/           # Nintendo 64
+├── genesis/roms/       # Sega Genesis / Mega Drive
+├── master-system/roms/ # Sega Master System
+├── game-gear/roms/     # Sega Game Gear
+├── sega-cd/roms/       # Sega CD
+├── saturn/roms/        # Sega Saturn
+├── dc/roms/            # Sega Dreamcast
+├── psx/roms/           # PlayStation
+├── psp/roms/           # PlayStation Portable
+├── gc/roms/            # GameCube
+├── wii/roms/           # Wii
+└── fbneo/roms/         # FinalBurn Neo — arcade
 ```
 
 > O diretório `data/` é montado como volume no container. Nunca commitar arquivos de ROM.

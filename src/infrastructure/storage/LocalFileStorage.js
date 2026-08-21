@@ -3,6 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { crc32 } = require('crc');
 const FileStorage = require('../../application/ports/FileStorage');
+const { getExtensions } = require('../../domain/enums/Platform');
 
 /**
  * Implementação do FileStorage usando o filesystem local.
@@ -28,9 +29,13 @@ class LocalFileStorage extends FileStorage {
     const dir = this._romsDir(platform);
     if (!fs.existsSync(dir)) throw new Error(`Diretório não encontrado: ${dir}`);
 
+    const extensions = getExtensions(platform);
+
     return fs.readdirSync(dir).filter((f) => {
       const name = f.toLowerCase();
-      return !name.startsWith('.') && !name.startsWith('._');
+      if (name.startsWith('.') || name.startsWith('._')) return false;
+      if (extensions.length === 0) return true;
+      return extensions.some((ext) => name.endsWith(ext));
     });
   }
 
