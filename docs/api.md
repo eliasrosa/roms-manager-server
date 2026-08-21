@@ -70,36 +70,6 @@ GET /roms?platform=snes&md5=4e46dd3ae5c9c70c49587d093517049a
 
 ---
 
-## `GET /roms/:platform/manifest`
-
-Retorna manifest leve para uso no fluxo de sync do app Nintendo Switch.  
-Contém apenas `filename`, `size` e `crc32` — sem metadados extras.
-
-**Params**
-
-| Param      | Tipo   | Descrição |
-|------------|--------|-----------|
-| `platform` | string | Plataforma desejada (`gba`, `snes`, etc.) |
-
-**Exemplo**
-```
-GET /roms/gba/manifest
-```
-
-**Response**
-```json
-{
-  "platform": "gba",
-  "total": 92,
-  "roms": [
-    { "filename": "Ace Combat Advance (USA, Europe).gba", "size": 4194304, "crc32": "AD4D5EC2" },
-    { "filename": "Advance Wars (USA) (Rev 1).gba", "size": 4194304, "crc32": "C845B05C" }
-  ]
-}
-```
-
----
-
 ## `GET /roms/:platform/:filename`
 
 Download direto de uma ROM.

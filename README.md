@@ -70,7 +70,6 @@ data/
 | `GET`  | `/` | Status básico (health simplificado) |
 | `GET`  | `/health` | Status do servidor |
 | `GET`  | `/roms` | Lista ROMs com filtros opcionais |
-| `GET`  | `/roms/:platform/manifest` | Manifest leve para sync (filename + size + crc32) |
 | `GET`  | `/roms/:platform/:filename` | Download direto da ROM |
 | `POST` | `/roms/sync?platform=gba` | Re-indexa ROMs (platform opcional = todas) |
 
@@ -88,7 +87,7 @@ GET /roms?platform=gba&crc32=AD4D5EC2
 
 ## Fluxo de sync — App Nintendo Switch
 
-1. App faz `GET /roms/:platform/manifest` → recebe lista com `filename`, `size`, `crc32`
+1. App faz `GET /roms?platform=gba` → recebe lista completa com `filename`, `size`, `crc32`, hashes
 2. Compara com o storage local (por filename + crc32)
 3. Baixa apenas as ROMs ausentes ou divergentes via `GET /roms/:platform/:filename`
 4. Verifica CRC32 localmente após o download para confirmar integridade

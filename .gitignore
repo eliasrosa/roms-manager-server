@@ -1,6 +1,5 @@
 data/
 __pycache__/
 *.pyc
-manifest.json
 .env
 node_modules/

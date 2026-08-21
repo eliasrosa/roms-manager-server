@@ -64,14 +64,13 @@ src/
 │   ├── enums/
 │   │   └── Platform.js             # Enum frozen + isValidPlatform()
 │   └── entities/
-│       └── Rom.js                  # Entidade pura com toManifestEntry()
+│       └── Rom.js                  # Entidade pura (POJO)
 ├── application/
 │   ├── ports/
 │   │   ├── RomRepository.js        # Contrato do repositório
 │   │   └── FileStorage.js          # Contrato do filesystem
 │   └── usecases/
 │       ├── ListRoms.js             # Filtro e listagem
-│       ├── GetManifest.js          # Manifest leve para sync
 │       ├── DownloadRom.js          # Resolve path + valida existência
 │       └── SyncRoms.js             # Indexação (syncAll / syncPlatform)
 ├── infrastructure/
@@ -134,9 +133,9 @@ arquivo → readStream → chunk → md5.update(chunk)
 ```
 Switch App                          Servidor
     │                                   │
-    │  GET /roms/:platform/manifest     │
+    │  GET /roms?platform=gba           │
     │──────────────────────────────────▶│
-    │  { filename, size, crc32 }[]      │
+    │  { roms: [...], total: N }        │
     │◀──────────────────────────────────│
     │                                   │
     │  [compara com storage local]      │
@@ -150,10 +149,8 @@ Switch App                          Servidor
     │                                   │
 ```
 
-**Por que CRC32 no manifest?**
-- 4 bytes vs 16 (MD5) ou 20 (SHA1) — payload menor em listas grandes
-- Suficiente para detectar divergência entre arquivos
-- MD5/SHA1 disponíveis via `GET /roms` para verificação mais rigorosa se necessário
+O app compara por `crc32` + `filename`. Se divergente, baixa o arquivo.  
+MD5/SHA1 disponíveis na listagem para verificação mais rigorosa se necessário.
 
 ---
 
