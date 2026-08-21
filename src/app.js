@@ -54,6 +54,8 @@ async function start() {
     res.status(500).json({ error: 'Erro interno do servidor' });
   });
 
+  app.get('/', (req, res) => res.json({ status: 'ok', time: Date.now() }));
+
   app.use('/roms', romRouter);
 
   app.get('/health', (req, res) => res.json({ status: 'ok', time: Date.now() }));

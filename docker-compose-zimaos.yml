@@ -1,0 +1,61 @@
+networks:
+  default:
+    name: roms-manager_default
+    ipam: {}
+    external: false
+services:
+  app:
+    command: null
+    depends_on:
+      mongo:
+        condition: service_healthy
+        required: true
+    entrypoint: null
+    environment:
+      DATA_DIR: /data
+      MONGO_URI: mongodb://mongo:27017/roms-manager
+    image: roms-manager:latest
+    networks:
+      - default
+    ports:
+      - mode: ingress
+        target: 8080
+        published: "8080"
+        protocol: tcp
+    pull_policy: never
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/Roms
+        target: /data
+  mongo:
+    command: null
+    entrypoint: null
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --eval
+        - db.adminCommand('ping')
+      timeout: 5s
+      interval: 5s
+      retries: 5
+    image: mongo:7
+    networks:
+      - default
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/AppData/.mongo/roms-manager
+        target: /data/db
+x-casaos:
+  hostname: 192.168.0.100
+  index: /
+  is_uncontrolled: false
+  main: app
+  port_map: "8080"
+  scheme: http
+  store_app_id: roms-manager
+  title:
+    custom: Roms Manager
+name: roms-manager

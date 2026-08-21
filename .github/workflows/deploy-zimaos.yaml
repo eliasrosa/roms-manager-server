@@ -1,0 +1,25 @@
+name: Deploy Automático ZimaOS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Download
+        uses: actions/checkout@v4
+
+      - name: Build
+        env:
+          DOCKER_CONFIG: /media/ZimaOS-HD/AppData/actions-runner/docker-config
+        run: |
+          mkdir -p "$DOCKER_CONFIG"
+          docker build -t roms-manager:latest .          
+          cd /var/lib/casaos/apps/roms-manager
+          docker compose pull || true
+          docker compose up -d --force-recreate
+          
