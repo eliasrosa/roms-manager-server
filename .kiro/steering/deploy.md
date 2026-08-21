@@ -35,6 +35,8 @@ push main → checkout → docker build → SSH deploy
 
 | Item | Valor |
 |------|-------|
+| IP | `192.168.0.100` |
+| Usuário SSH | `root` |
 | Runner | Self-hosted, instalado em `/media/ZimaOS-HD/AppData/actions-runner` |
 | App dir (CasaOS) | `/var/lib/casaos/apps/roms-manager` |
 | Volume ROMs | `/media/ZimaOS-HD/Roms` → `/data` no container |

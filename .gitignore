@@ -4,3 +4,4 @@ __pycache__/
 manifest.json
 .env
 node_modules/
+.kiro/steering/deploy.md

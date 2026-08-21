@@ -27,14 +27,6 @@ class Rom {
     this.updatedAt = updatedAt;
   }
 
-  /** Retorna representação leve para uso no manifest de sync. */
-  toManifestEntry() {
-    return {
-      filename: this.filename,
-      size:     this.size,
-      crc32:    this.crc32,
-    };
-  }
 }
 
 module.exports = Rom;

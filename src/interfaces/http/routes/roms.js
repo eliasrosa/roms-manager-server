@@ -10,7 +10,6 @@ function createRomRouter(controller) {
 
   router.get('/',                     wrap(controller.list));
   router.post('/sync',                wrap(controller.sync));
-  router.get('/:platform/manifest',   wrap(controller.manifest));
   router.get('/:platform/:filename',  wrap(controller.download));
 
   return router;

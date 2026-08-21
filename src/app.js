@@ -10,7 +10,6 @@ const LocalFileStorage      = require('./infrastructure/storage/LocalFileStorage
 
 // Use cases
 const ListRoms              = require('./application/usecases/ListRoms');
-const GetManifest           = require('./application/usecases/GetManifest');
 const { DownloadRom }       = require('./application/usecases/DownloadRom');
 const SyncRoms              = require('./application/usecases/SyncRoms');
 
@@ -31,10 +30,9 @@ async function start() {
 
   const syncRoms    = new SyncRoms(romRepository, fileStorage);
   const listRoms    = new ListRoms(romRepository);
-  const getManifest = new GetManifest(romRepository);
   const downloadRom = new DownloadRom(romRepository, fileStorage);
 
-  const controller  = new RomController({ listRoms, getManifest, downloadRom, syncRoms });
+  const controller  = new RomController({ listRoms, downloadRom, syncRoms });
   const romRouter   = createRomRouter(controller);
 
   // Indexação inicial
@@ -70,7 +68,6 @@ async function start() {
     console.log('');
     console.log(`  GET  http://0.0.0.0:${PORT}/health`);
     console.log(`  GET  http://0.0.0.0:${PORT}/roms?platform=gba`);
-    console.log(`  GET  http://0.0.0.0:${PORT}/roms/:platform/manifest`);
     console.log(`  GET  http://0.0.0.0:${PORT}/roms/:platform/:filename`);
     console.log(`  POST http://0.0.0.0:${PORT}/roms/sync`);
     console.log('');
