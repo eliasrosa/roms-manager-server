@@ -118,7 +118,7 @@ Qualquer push na `main` dispara o workflow `.github/workflows/deploy-zimaos.yaml
 
 1. Checkout do código
 2. `docker build` da imagem `roms-manager:latest`
-3. SSH no ZimaOS para `docker compose up -d --force-recreate`
+3. SSH no ZimaOS para `docker compose up -d --force-recreate` (usando `docker-compose-zimaos.yml`)
 
 ---
 
